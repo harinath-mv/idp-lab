@@ -1,0 +1,23 @@
+name: 03 triggers
+
+on:
+  push:
+    branches: [main, "feature/**"]
+    paths-ignore: ["**.md"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  show-event:
+    runs-on: ubuntu-latest
+    steps:
+      - name: What started me?
+        run: |
+          echo "Event      : ${{ github.event_name }}"
+          echo "Branch/ref : ${{ github.ref }}"
+          echo "Commit     : ${{ github.sha }}"
+          echo "Started by : ${{ github.actor }}"
+      - name: Only on pull requests
+        if: github.event_name == 'pull_request'
+        run: echo "PR #${{ github.event.number }} from ${{ github.head_ref }} into ${{ github.base_ref }}"
