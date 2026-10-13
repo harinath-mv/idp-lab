@@ -1,0 +1,62 @@
+name: 02 pipeline
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      break_tests:
+        description: "Make the tests fail on purpose?"
+        type: boolean
+        default: false
+
+env:
+  APP_NAME: idp-lab
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Work out a version number
+        id: ver
+        run: echo "version=1.0.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+      - name: Build the app (pretend)
+        run: |
+          mkdir -p dist
+          echo "$APP_NAME version ${{ steps.ver.outputs.version }} built from ${{ github.sha }}" > dist/app.txt
+          cat dist/app.txt
+      - name: Save the build for later jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-build
+          path: dist/
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the build from the build job
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build
+          path: dist/
+      - name: Run tests (pretend)
+        env:
+          BREAK_TESTS: ${{ inputs.break_tests }}
+        run: |
+          grep -q "${{ needs.build.outputs.version }}" dist/app.txt && echo "version check passed"
+          if [ "$BREAK_TESTS" = "true" ]; then
+            echo "::error title=Unit tests::2 of 40 tests failed (on purpose)"
+            exit 1
+          fi
+          echo "40 of 40 tests passed"
+
+  deploy-dev:
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy (pretend)
+        run: echo "Deploying $APP_NAME ${{ needs.build.outputs.version }} to dev"
