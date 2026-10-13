@@ -1,0 +1,25 @@
+name: 01 hello
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  say-hello:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the code
+        uses: actions/checkout@v4
+
+      - name: Say hello
+        run: echo "Hello from GitHub Actions, triggered by ${{ github.actor }} on ${{ github.ref_name }}"
+
+      - name: Who and where am I?
+        run: |
+          echo "Runner OS      : $RUNNER_OS"
+          echo "Machine name   : $(hostname)"
+          echo "Logged-in user : $(whoami)"
+          echo "Folder         : $(pwd)"
+          echo "Files in repo  :"
+          ls -la
