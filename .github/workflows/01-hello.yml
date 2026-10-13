@@ -1,0 +1,26 @@
+name: 02 pipeline              # what you see in the Actions tab
+
+on:                            # EVENTS: when to run
+  push:
+    branches: [main]
+  workflow_dispatch:           # adds a "Run workflow" button
+
+permissions:                   # LEAST PRIVILEGE for the run's GITHUB_TOKEN (Week 1 + Day 5)
+  contents: read
+
+env:                           # variables for every job
+  APP_NAME: idp-lab
+
+jobs:                          # JOBS: each gets a fresh runner
+  build:
+    runs-on: ubuntu-latest     # RUNNER: which kind of machine
+    steps:                     # STEPS: run in order, top to bottom
+      - uses: actions/checkout@v4      # a ready-made ACTION (download my repo)
+      - name: Build
+        run: echo "building $APP_NAME" # a shell COMMAND
+  deploy:
+    needs: build               # wait for build to succeed
+    runs-on: ubuntu-latest
+    environment: prod          # approval gate + changes the OIDC sub (Day 5!)
+    steps:
+      - run: echo "deploying"
