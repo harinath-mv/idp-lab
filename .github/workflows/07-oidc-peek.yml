@@ -1,0 +1,45 @@
+name: 07 oidc peek
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # lets jobs ask GitHub for an OIDC token (Day 5)
+  contents: read
+
+jobs:
+  peek-main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ask GitHub for an OIDC token and show its claims (never the token itself)
+        run: |
+          RESP=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+                 "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com")
+          echo "$RESP" | python3 -c '
+          import sys, json, base64
+          tok = json.load(sys.stdin)["value"]
+          p = tok.split(".")[1]; p += "=" * (-len(p) % 4)
+          c = json.loads(base64.urlsafe_b64decode(p))
+          for k in ("iss", "sub", "aud", "repository", "ref", "environment", "event_name", "exp"):
+              print(f"{k:<12} {c.get(k)}")
+          '
+
+  peek-prod:
+    needs: peek-main
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - name: Same thing, but this job uses environment prod
+        run: |
+          RESP=$(curl -sS -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+                 "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com")
+          echo "$RESP" | python3 -c '
+          import sys, json, base64
+          tok = json.load(sys.stdin)["value"]
+          p = tok.split(".")[1]; p += "=" * (-len(p) % 4)
+          c = json.loads(base64.urlsafe_b64decode(p))
+          for k in ("iss", "sub", "aud", "repository", "ref", "environment", "event_name", "exp"):
+              print(f"{k:<12} {c.get(k)}")
+          '
