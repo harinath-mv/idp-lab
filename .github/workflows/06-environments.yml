@@ -1,0 +1,18 @@
+name: 06 environments
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - run: echo "Deploying to DEV - no approval needed"
+
+  deploy-production:
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - run: echo "Deploying to PRODUCTION - someone approved this run"
